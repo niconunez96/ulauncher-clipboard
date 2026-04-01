@@ -2,7 +2,7 @@ import os
 import subprocess
 import json
 from shutil import which
-from lib import exec_get, pid_of
+from lib import pid_of
 
 name = 'Clipman'
 client = 'clipman'
@@ -28,7 +28,17 @@ def add(text):
     subprocess.call([copy_agent, text])
 
 def get_history():
-    val=json.loads(exec_get(client, 'show-history'))
-    val.reverse()
-    return val
+    histpath = os.path.expanduser('~/.local/share/clipman.json')
+    if not os.path.exists(histpath):
+        return []
 
+    try:
+        with open(histpath, encoding='utf-8') as histfile:
+            val = json.load(histfile)
+    except (OSError, json.JSONDecodeError):
+        return []
+
+    if not isinstance(val, list):
+        return []
+
+    return [entry for entry in reversed(val) if isinstance(entry, str)]
